@@ -50,11 +50,6 @@ FEATURE_NAMES = [
     "Calcium_Intake", "BMI", "Physical_Activity_Level"
 ]
 
-# Feature importance
-print("\n📊 FEATURE IMPORTANCE:\n")
-for name, importance in zip(FEATURE_NAMES, model.feature_importances_):
-    print(f"{name}: {importance:.4f}")
-
 RISK_LABELS = {
     0: "Düşük",
     1: "Orta",
@@ -89,9 +84,6 @@ def predict():
     pred_class = int(model.predict(df_input)[0])
     probas = model.predict_proba(df_input)[0]
 
-    # ==========================
-    # MODEL SONUÇ
-    # ==========================
     if len(probas) == 2:
         low = float(probas[0])
         high = float(probas[1])
@@ -120,9 +112,7 @@ def predict():
             }
         }
 
-    # ==========================
     # 🔥 DATABASE KAYIT
-    # ==========================
     session = Session()
 
     new_result = Result(
@@ -139,7 +129,32 @@ def predict():
 
 
 # ==========================
-# 8) RUN
+# 8) 🔥 RESULTS ENDPOINT (YENİ)
+# ==========================
+@app.route("/results", methods=["GET"])
+def get_results():
+
+    session = Session()
+
+    results = session.query(Result).order_by(Result.id.desc()).all()
+
+    data = []
+
+    for r in results:
+        data.append({
+            "id": r.id,
+            "risk": r.risk,
+            "date": r.date,
+            "answers": r.answers
+        })
+
+    session.close()
+
+    return jsonify(data), 200
+
+
+# ==========================
+# 9) RUN
 # ==========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
