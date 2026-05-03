@@ -2,17 +2,34 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
 import pandas as pd
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 # ==========================
 # 1) FLASK UYGULAMASI
 # ==========================
 app = Flask(__name__)
+
+DATABASE_URL = "mysql+pymysql://root:KYKapevzfPrTzVMwDpReQwwThExlyvrV@switchback.proxy.rlwy.net:52815/railway"
+
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+Base = declarative_base()
+
 CORS(app)
 
 # ==========================
 # 2) MODEL YÜKLE
 # ==========================
 model = joblib.load("breast_cancer_model.pkl")
+
+class Result(Base):
+    __tablename__ = "results"
+
+    id = Column(Integer, primary_key=True)
+    risk = Column(Integer)
+    date = Column(String(50))
+    answers = Column(Text)
 
 FEATURE_NAMES = [
     "Age",
