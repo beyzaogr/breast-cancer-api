@@ -32,6 +32,7 @@ class Result(Base):
     __tablename__ = "results"
 
     id = Column(Integer, primary_key=True)
+    username = Column(String(100))
     risk = Column(Integer)
     date = Column(String(50))
     answers = Column(Text)
@@ -71,6 +72,9 @@ def predict():
 
     data = request.get_json()
 
+    # 🔥 USERNAME
+    username = data.get("username", "unknown")
+
     missing = [f for f in FEATURE_NAMES if f not in data]
     if missing:
         return jsonify({
@@ -78,8 +82,10 @@ def predict():
             "missing_fields": missing
         }), 400
 
-    df_input = pd.DataFrame([[data[f] for f in FEATURE_NAMES]],
-                            columns=FEATURE_NAMES)
+    df_input = pd.DataFrame(
+        [[data[f] for f in FEATURE_NAMES]],
+        columns=FEATURE_NAMES
+    )
 
     pred_class = int(model.predict(df_input)[0])
     probas = model.predict_proba(df_input)[0]
@@ -112,10 +118,13 @@ def predict():
             }
         }
 
+    # ==========================
     # 🔥 DATABASE KAYIT
+    # ==========================
     session = Session()
 
     new_result = Result(
+        username=username,
         risk=int(result["probabilities"]["high"] * 100),
         date="bugün",
         answers=str(data)
@@ -129,20 +138,25 @@ def predict():
 
 
 # ==========================
-# 8) 🔥 RESULTS ENDPOINT (YENİ)
+# 8) RESULTS ENDPOINT
 # ==========================
 @app.route("/results", methods=["GET"])
 def get_results():
 
+    username = request.args.get("username")
+
     session = Session()
 
-    results = session.query(Result).order_by(Result.id.desc()).all()
+    results = session.query(Result).filter(
+        Result.username == username
+    ).order_by(Result.id.desc()).all()
 
     data = []
 
     for r in results:
         data.append({
             "id": r.id,
+            "username": r.username,
             "risk": r.risk,
             "date": r.date,
             "answers": r.answers
