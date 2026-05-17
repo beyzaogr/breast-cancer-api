@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
 import pandas as pd
+from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -44,11 +45,23 @@ Base.metadata.create_all(engine)
 # 5) FEATURE LIST
 # ==========================
 FEATURE_NAMES = [
-    "Age", "Gender", "Smoking", "Alcohol_Use", "Obesity",
-    "Family_History", "Diet_Red_Meat", "Diet_Salted_Processed",
-    "Fruit_Veg_Intake", "Physical_Activity", "Air_Pollution",
-    "Occupational_Hazards", "BRCA_Mutation", "H_Pylori_Infection",
-    "Calcium_Intake", "BMI", "Physical_Activity_Level"
+    "Age",
+    "Gender",
+    "Smoking",
+    "Alcohol_Use",
+    "Obesity",
+    "Family_History",
+    "Diet_Red_Meat",
+    "Diet_Salted_Processed",
+    "Fruit_Veg_Intake",
+    "Physical_Activity",
+    "Air_Pollution",
+    "Occupational_Hazards",
+    "BRCA_Mutation",
+    "H_Pylori_Infection",
+    "Calcium_Intake",
+    "BMI",
+    "Physical_Activity_Level"
 ]
 
 RISK_LABELS = {
@@ -62,10 +75,12 @@ RISK_LABELS = {
 # ==========================
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "Breast cancer risk API çalışıyor 🚀"}), 200
+    return jsonify({
+        "message": "Breast cancer risk API çalışıyor 🚀"
+    }), 200
 
 # ==========================
-# 7) PREDICT
+# 7) PREDICT ENDPOINT
 # ==========================
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -75,13 +90,20 @@ def predict():
     # 🔥 USERNAME
     username = data.get("username", "unknown")
 
+    # ==========================
+    # EKSİK ALAN KONTROL
+    # ==========================
     missing = [f for f in FEATURE_NAMES if f not in data]
+
     if missing:
         return jsonify({
             "error": "Eksik alanlar var",
             "missing_fields": missing
         }), 400
 
+    # ==========================
+    # MODEL INPUT
+    # ==========================
     df_input = pd.DataFrame(
         [[data[f] for f in FEATURE_NAMES]],
         columns=FEATURE_NAMES
@@ -90,7 +112,11 @@ def predict():
     pred_class = int(model.predict(df_input)[0])
     probas = model.predict_proba(df_input)[0]
 
+    # ==========================
+    # MODEL SONUCU
+    # ==========================
     if len(probas) == 2:
+
         low = float(probas[0])
         high = float(probas[1])
         medium = 0.0
@@ -108,9 +134,13 @@ def predict():
         }
 
     else:
+
         result = {
             "predicted_class": pred_class,
-            "predicted_label": RISK_LABELS.get(pred_class, "Bilinmiyor"),
+            "predicted_label": RISK_LABELS.get(
+                pred_class,
+                "Bilinmiyor"
+            ),
             "probabilities": {
                 "low": float(probas[0]),
                 "medium": float(probas[1]),
@@ -121,12 +151,14 @@ def predict():
     # ==========================
     # 🔥 DATABASE KAYIT
     # ==========================
+    current_date = datetime.now().strftime("%d.%m.%Y %H:%M")
+
     session = Session()
 
     new_result = Result(
         username=username,
         risk=int(result["probabilities"]["high"] * 100),
-        date="bugün",
+        date=current_date,
         answers=str(data)
     )
 
@@ -134,8 +166,10 @@ def predict():
     session.commit()
     session.close()
 
+    # ==========================
+    # RESPONSE
+    # ==========================
     return jsonify(result), 200
-
 
 # ==========================
 # 8) RESULTS ENDPOINT
@@ -147,9 +181,16 @@ def get_results():
 
     session = Session()
 
-    results = session.query(Result).filter(
-        Result.username == username
-    ).order_by(Result.id.desc()).all()
+    # Eğer username verilmişse filtrele
+    if username:
+        results = session.query(Result).filter(
+            Result.username == username
+        ).order_by(Result.id.desc()).all()
+
+    else:
+        results = session.query(Result).order_by(
+            Result.id.desc()
+        ).all()
 
     data = []
 
@@ -166,9 +207,12 @@ def get_results():
 
     return jsonify(data), 200
 
-
 # ==========================
 # 9) RUN
 # ==========================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=True
+    )
