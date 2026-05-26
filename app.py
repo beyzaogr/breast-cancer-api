@@ -37,6 +37,7 @@ class Result(Base):
     risk = Column(Integer)
     date = Column(String(50))
     answers = Column(Text)
+    reminder_day = Column(Integer, nullable=True)
 
 # 🔥 TABLOYU OLUŞTUR
 Base.metadata.create_all(engine)
@@ -206,7 +207,42 @@ def get_results():
     session.close()
 
     return jsonify(data), 200
+# ==========================
+# 9) SAVE REMINDER
+# ==========================
+@app.route("/save_reminder", methods=["POST"])
+def save_reminder():
 
+    data = request.get_json()
+
+    username = data.get("username")
+    reminder_day = data.get("reminder_day")
+
+    session = Session()
+
+    latest_result = session.query(Result).filter(
+        Result.username == username
+    ).order_by(Result.id.desc()).first()
+
+    if latest_result:
+
+        latest_result.reminder_day = reminder_day
+
+        session.commit()
+
+        session.close()
+
+        return jsonify({
+            "success": True,
+            "message": "Reminder kaydedildi"
+        }), 200
+
+    session.close()
+
+    return jsonify({
+        "success": False,
+        "message": "Kullanıcı bulunamadı"
+    }), 404
 # ==========================
 # 9) RUN
 # ==========================
