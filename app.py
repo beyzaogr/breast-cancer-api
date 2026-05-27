@@ -37,7 +37,13 @@ class Result(Base):
     risk = Column(Integer)
     date = Column(String(50))
     answers = Column(Text)
-    reminder_day = Column(Integer, nullable=True)
+
+class Reminder(Base):
+    __tablename__ = "reminders"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(255))
+    reminder_day = Column(Integer)
 
 # 🔥 TABLOYU OLUŞTUR
 Base.metadata.create_all(engine)
