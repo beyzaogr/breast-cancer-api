@@ -226,29 +226,21 @@ def save_reminder():
 
     session = Session()
 
-    latest_result = session.query(Result)\
-    .order_by(Result.id.desc())\
-    .first()
+    new_reminder = Reminder(
+        username=username,
+        reminder_day=reminder_day
+    )
 
-    if latest_result:
+    session.add(new_reminder)
 
-        latest_result.reminder_day = reminder_day
-
-        session.commit()
-
-        session.close()
-
-        return jsonify({
-            "success": True,
-            "message": "Reminder kaydedildi"
-        }), 200
+    session.commit()
 
     session.close()
 
     return jsonify({
-        "success": False,
-        "message": "Kullanıcı bulunamadı"
-    }), 404
+        "success": True,
+        "message": "Reminder kaydedildi"
+    }), 200
 # ==========================
 # 9) RUN
 # ==========================
