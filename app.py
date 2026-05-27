@@ -220,9 +220,9 @@ def save_reminder():
 
     session = Session()
 
-    latest_result = session.query(Result).filter(
-        Result.username == username
-    ).order_by(Result.id.desc()).first()
+    latest_result = session.query(Result)\
+    .order_by(Result.id.desc())\
+    .first()
 
     if latest_result:
 
