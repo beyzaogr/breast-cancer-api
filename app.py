@@ -52,7 +52,6 @@ class User(Base):
     email = Column(String(255), unique=True)
     password = Column(String(255))
     name = Column(String(255))
-    surname = Column(String(255))
     phone = Column(String(50))
 
 # 🔥 TABLOYU OLUŞTUR
@@ -263,7 +262,6 @@ def save_user():
     email = data.get("email")
     password = data.get("password")
     name = data.get("name")
-    surname = data.get("surname")
     phone = data.get("phone")
 
     session = Session()
@@ -272,7 +270,6 @@ def save_user():
         email=email,
         password=password,
         name=name,
-        surname=surname,
         phone=phone
     )
 
