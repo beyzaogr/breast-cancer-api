@@ -45,6 +45,16 @@ class Reminder(Base):
     username = Column(String(255))
     reminder_day = Column(Integer)
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), unique=True)
+    password = Column(String(255))
+    name = Column(String(255))
+    surname = Column(String(255))
+    phone = Column(String(50))
+
 # 🔥 TABLOYU OLUŞTUR
 Base.metadata.create_all(engine)
 
