@@ -251,6 +251,41 @@ def save_reminder():
         "success": True,
         "message": "Reminder kaydedildi"
     }), 200
+
+# ==========================
+# 10) SAVE USER
+# ==========================
+@app.route("/save_user", methods=["POST"])
+def save_user():
+
+    data = request.get_json()
+
+    email = data.get("email")
+    password = data.get("password")
+    name = data.get("name")
+    surname = data.get("surname")
+    phone = data.get("phone")
+
+    session = Session()
+
+    new_user = User(
+        email=email,
+        password=password,
+        name=name,
+        surname=surname,
+        phone=phone
+    )
+
+    session.add(new_user)
+
+    session.commit()
+
+    session.close()
+
+    return jsonify({
+        "success": True,
+        "message": "Kullanıcı kaydedildi"
+    }), 200
 # ==========================
 # 9) RUN
 # ==========================
